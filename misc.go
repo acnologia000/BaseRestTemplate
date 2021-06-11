@@ -26,7 +26,7 @@ func snapShotCartService(ticker *time.Ticker) {
 }
 
 func snapShotCarts() error {
-	f, err := os.OpenFile("access.log", os.O_TRUNC|os.O_CREATE|os.O_RDWR, 0644)
+	f, err := os.OpenFile("snapshot.bin", os.O_TRUNC|os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
 		return err
 	}
