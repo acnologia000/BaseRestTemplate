@@ -21,8 +21,12 @@ const (
 	ListenAddressNotSetError         = "LISTEN_ADDRESS not found \n using default"
 )
 
-var SessionServiceChannel = make(chan bool)
-var SnapShotServiceChannel = make(chan bool)
+// channels to different ticker services graceful shutdown
+var (
+	SessionServiceChannel     = make(chan bool)
+	SnapShotServiceChannel    = make(chan bool)
+	VerificationServiceChanel = make(chan bool)
+)
 
 // Asset Strings
 const (
@@ -59,12 +63,16 @@ func main() {
 	}
 
 	// setting up session expire service
-	ticker := time.NewTicker(time.Minute * 3)
-	sessionExpireService(ticker)
+	Sessionticker := time.NewTicker(time.Minute * 3)
+	sessionExpireService(Sessionticker)
 
 	// setting up snapshot service
 	snapShotTicker := time.NewTicker(time.Minute * 5)
 	snapShotCartService(snapShotTicker)
+
+	// setting up snapshot service
+	verifyTicker := time.NewTicker(time.Minute * 3)
+	DeleteInvalidPendingVerificationsService(verifyTicker)
 
 	// connecting to database
 	connection := connect(ConnectionURL)
@@ -85,6 +93,7 @@ func main() {
 		<-sigDone                              // unblocks goroutine only when sigDone has value ie a signal
 		SessionServiceChannel <- true          // sends a value to session expire session goroutine to stop
 		SnapShotServiceChannel <- true         // sends signal to snapshot service
+		VerificationServiceChanel <- true      // sends signal to Verification service
 		connection.Close(context.Background()) // closing database connextion
 		time.Sleep(time.Second)                // givining time for database connectin to close
 		os.Exit(0)                             // exiting
